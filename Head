@@ -1,0 +1,404 @@
+
+--Converted with ttyyuu12345's model to script plugin v4
+function sandbox(var,func)
+	local env = getfenv(func)
+	local newenv = setmetatable({},{
+		__index = function(self,k)
+			if k=="script" then
+				return var
+			else
+				return env[k]
+			end
+		end,
+	})
+	setfenv(func,newenv)
+	return func
+end
+cors = {}
+mas = Instance.new("Model",game:GetService("Lighting"))
+Tool0 = Instance.new("Tool")
+Part1 = Instance.new("Part")
+Decal2 = Instance.new("Decal")
+SpecialMesh3 = Instance.new("SpecialMesh")
+Script4 = Instance.new("Script")
+Part5 = Instance.new("Part")
+SpecialMesh6 = Instance.new("SpecialMesh")
+Part7 = Instance.new("Part")
+SpecialMesh8 = Instance.new("SpecialMesh")
+Part9 = Instance.new("Part")
+SpecialMesh10 = Instance.new("SpecialMesh")
+Part11 = Instance.new("Part")
+SpecialMesh12 = Instance.new("SpecialMesh")
+Part13 = Instance.new("Part")
+SpecialMesh14 = Instance.new("SpecialMesh")
+Part15 = Instance.new("Part")
+SpecialMesh16 = Instance.new("SpecialMesh")
+Part17 = Instance.new("Part")
+SpecialMesh18 = Instance.new("SpecialMesh")
+Part19 = Instance.new("Part")
+SpecialMesh20 = Instance.new("SpecialMesh")
+Tool0.Name = "Head"
+Tool0.Parent = mas
+Part1.Name = "Handle"
+Part1.Parent = Tool0
+Part1.CFrame = CFrame.new(18.8989258, 4.5, -26.6651611, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+Part1.Position = Vector3.new(18.89892578125, 4.5, -26.6651611328125)
+Part1.Size = Vector3.new(2, 1, 1)
+Part1.BottomSurface = Enum.SurfaceType.Smooth
+Part1.TopSurface = Enum.SurfaceType.Smooth
+Decal2.Name = "Face"
+Decal2.Parent = Part1
+Decal2.Texture = "rbxasset://textures/face.png"
+SpecialMesh3.Parent = Part1
+SpecialMesh3.Scale = Vector3.new(1.25, 1.25, 1.25)
+Script4.Name = "qPerfectionWeld"
+Script4.Parent = Part1
+table.insert(cors,sandbox(Script4,function()
+-- Created by Quenty (@Quenty, follow me on twitter).
+-- Should work with only ONE copy, seamlessly with weapons, trains, et cetera.
+-- Parts should be ANCHORED before use. It will, however, store relatives values and so when tools are reparented, it'll fix them.
+
+--[[ INSTRUCTIONS
+- Place in the model
+- Make sure model is anchored
+- That's it. It will weld the model and all children. 
+
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+THIS SCRIPT SHOULD BE USED ONLY BY ITSELF. THE MODEL SHOULD BE ANCHORED. 
+
+This script is designed to be used is a regular script. In a local script it will weld, but it will not attempt to handle ancestory changes. 
+]]
+
+--[[ DOCUMENTATION
+- Will work in tools. If ran more than once it will not create more than one weld.  This is especially useful for tools that are dropped and then picked up again.
+- Will work in PBS servers
+- Will work as long as it starts out with the part anchored
+- Stores the relative CFrame as a CFrame value
+- Takes careful measure to reduce lag by not having a joint set off or affected by the parts offset from origin
+- Utilizes a recursive algorith to find all parts in the model
+- Will reweld on script reparent if the script is initially parented to a tool.
+- Welds as fast as possible
+]]
+
+-- qPerfectionWeld.lua
+-- Created 10/6/2014
+-- Author: Quenty
+-- Version 1.0.3
+
+-- Updated 10/14/2014 - Updated to 1.0.1
+--- Bug fix with existing ROBLOX welds ? Repro by asimo3089
+
+-- Updated 10/14/2014 - Updated to 1.0.2
+--- Fixed bug fix. 
+
+-- Updated 10/14/2014 - Updated to 1.0.3
+--- Now handles joints semi-acceptably. May be rather hacky with some joints. :/
+
+local NEVER_BREAK_JOINTS = false -- If you set this to true it will never break joints (this can create some welding issues, but can save stuff like hinges).
+
+
+local function CallOnChildren(Instance, FunctionToCall)
+	-- Calls a function on each of the children of a certain object, using recursion.  
+
+	FunctionToCall(Instance)
+
+	for _, Child in next, Instance:GetChildren() do
+		CallOnChildren(Child, FunctionToCall)
+	end
+end
+
+local function GetNearestParent(Instance, ClassName)
+	-- Returns the nearest parent of a certain class, or returns nil
+
+	local Ancestor = Instance
+	repeat
+		Ancestor = Ancestor.Parent
+		if Ancestor == nil then
+			return nil
+		end
+	until Ancestor:IsA(ClassName)
+
+	return Ancestor
+end
+
+local function GetBricks(StartInstance)
+	local List = {}
+
+	-- if StartInstance:IsA("BasePart") then
+	-- 	List[#List+1] = StartInstance
+	-- end
+
+	CallOnChildren(StartInstance, function(Item)
+		if Item:IsA("BasePart") then
+			List[#List+1] = Item;
+		end
+	end)
+
+	return List
+end
+
+local function Modify(Instance, Values)
+	-- Modifies an Instance by using a table.  
+
+	assert(type(Values) == "table", "Values is not a table");
+
+	for Index, Value in next, Values do
+		if type(Index) == "number" then
+			Value.Parent = Instance
+		else
+			Instance[Index] = Value
+		end
+	end
+	return Instance
+end
+
+local function Make(ClassType, Properties)
+	-- Using a syntax hack to create a nice way to Make new items.  
+
+	return Modify(Instance.new(ClassType), Properties)
+end
+
+local Surfaces = {"TopSurface", "BottomSurface", "LeftSurface", "RightSurface", "FrontSurface", "BackSurface"}
+local HingSurfaces = {"Hinge", "Motor", "SteppingMotor"}
+
+local function HasWheelJoint(Part)
+	for _, SurfaceName in pairs(Surfaces) do
+		for _, HingSurfaceName in pairs(HingSurfaces) do
+			if Part[SurfaceName].Name == HingSurfaceName then
+				return true
+			end
+		end
+	end
+	
+	return false
+end
+
+local function ShouldBreakJoints(Part)
+	--- We do not want to break joints of wheels/hinges. This takes the utmost care to not do this. There are
+	--  definitely some edge cases. 
+
+	if NEVER_BREAK_JOINTS then
+		return false
+	end
+	
+	if HasWheelJoint(Part) then
+		return false
+	end
+	
+	local Connected = Part:GetConnectedParts()
+	
+	if #Connected == 1 then
+		return false
+	end
+	
+	for _, Item in pairs(Connected) do
+		if HasWheelJoint(Item) then
+			return false
+		elseif not Item:IsDescendantOf(script.Parent) then
+			return false
+		end
+	end
+	
+	return true
+end
+
+local function WeldTogether(Part0, Part1, JointType, WeldParent)
+	--- Weld's 2 parts together
+	-- @param Part0 The first part
+	-- @param Part1 The second part (Dependent part most of the time).
+	-- @param [JointType] The type of joint. Defaults to weld.
+	-- @param [WeldParent] Parent of the weld, Defaults to Part0 (so GC is better).
+	-- @return The weld created.
+
+	JointType = JointType or "Weld"
+	local RelativeValue = Part1:FindFirstChild("qRelativeCFrameWeldValue")
+	
+	local NewWeld = Part1:FindFirstChild("qCFrameWeldThingy") or Instance.new(JointType)
+	Modify(NewWeld, {
+		Name = "qCFrameWeldThingy";
+		Part0  = Part0;
+		Part1  = Part1;
+		C0     = CFrame.new();--Part0.CFrame:inverse();
+		C1     = RelativeValue and RelativeValue.Value or Part1.CFrame:toObjectSpace(Part0.CFrame); --Part1.CFrame:inverse() * Part0.CFrame;-- Part1.CFrame:inverse();
+		Parent = Part1;
+	})
+
+	if not RelativeValue then
+		RelativeValue = Make("CFrameValue", {
+			Parent     = Part1;
+			Name       = "qRelativeCFrameWeldValue";
+			Archivable = true;
+			Value      = NewWeld.C1;
+		})
+	end
+
+	return NewWeld
+end
+
+local function WeldParts(Parts, MainPart, JointType, DoNotUnanchor)
+	-- @param Parts The Parts to weld. Should be anchored to prevent really horrible results.
+	-- @param MainPart The part to weld the model to (can be in the model).
+	-- @param [JointType] The type of joint. Defaults to weld. 
+	-- @parm DoNotUnanchor Boolean, if true, will not unachor the model after cmopletion.
+	
+	for _, Part in pairs(Parts) do
+		if ShouldBreakJoints(Part) then
+			Part:BreakJoints()
+		end
+	end
+	
+	for _, Part in pairs(Parts) do
+		if Part ~= MainPart then
+			WeldTogether(MainPart, Part, JointType, MainPart)
+		end
+	end
+
+	if not DoNotUnanchor then
+		for _, Part in pairs(Parts) do
+			Part.Anchored = false
+		end
+		MainPart.Anchored = false
+	end
+end
+
+local function PerfectionWeld()	
+	local Tool = GetNearestParent(script, "Tool")
+
+	local Parts = GetBricks(script.Parent)
+	local PrimaryPart = Tool and Tool:FindFirstChild("Handle") and Tool.Handle:IsA("BasePart") and Tool.Handle or script.Parent:IsA("Model") and script.Parent.PrimaryPart or Parts[1]
+
+	if PrimaryPart then
+		WeldParts(Parts, PrimaryPart, "Weld", false)
+	else
+		warn("qWeld - Unable to weld part")
+	end
+	
+	return Tool
+end
+
+local Tool = PerfectionWeld()
+
+
+if Tool and script.ClassName == "Script" then
+	--- Don't bother with local scripts
+
+	script.Parent.AncestryChanged:connect(function()
+		PerfectionWeld()
+	end)
+end
+
+-- Created by Quenty (@Quenty, follow me on twitter).
+
+end))
+Part5.Parent = Part1
+Part5.CFrame = CFrame.new(18.7410393, 3.71744919, -26.5522423, 1, -2.9117404e-13, 1.19209268e-07, 3.0567603e-13, 1, 5.83251871e-13, 1.1920929e-07, -6.10460575e-13, 1)
+Part5.Position = Vector3.new(18.741039276123047, 3.717449188232422, -26.552242279052734)
+Part5.Color = Color3.new(1, 0.580392, 0.580392)
+Part5.Size = Vector3.new(0.21609945595264435, 1.28003990650177, 0.2229788601398468)
+Part5.BottomSurface = Enum.SurfaceType.Smooth
+Part5.BrickColor = BrickColor.new("Salmon")
+Part5.Material = Enum.Material.Pebble
+Part5.TopSurface = Enum.SurfaceType.Smooth
+Part5.brickColor = BrickColor.new("Salmon")
+SpecialMesh6.Parent = Part5
+SpecialMesh6.MeshType = Enum.MeshType.Sphere
+Part7.Parent = Part1
+Part7.CFrame = CFrame.new(18.7721767, 3.83266401, -26.6327763, 0.99999994, -2.91174067e-13, 1.19209261e-07, 3.05676003e-13, 1, 5.83251871e-13, 1.19209282e-07, -6.1046063e-13, 1)
+Part7.Position = Vector3.new(18.77217674255371, 3.8326640129089355, -26.632776260375977)
+Part7.Color = Color3.new(1, 0.580392, 0.580392)
+Part7.Size = Vector3.new(0.5445201396942139, 0.27040109038352966, 0.5710217356681824)
+Part7.BottomSurface = Enum.SurfaceType.Smooth
+Part7.BrickColor = BrickColor.new("Salmon")
+Part7.Material = Enum.Material.Pebble
+Part7.TopSurface = Enum.SurfaceType.Smooth
+Part7.brickColor = BrickColor.new("Salmon")
+SpecialMesh8.Parent = Part7
+SpecialMesh8.MeshType = Enum.MeshType.Sphere
+Part9.Parent = Part1
+Part9.CFrame = CFrame.new(19.2081985, 3.89283085, -26.6931038, 1, -2.91174067e-13, 1.19209268e-07, 3.0567603e-13, 1, 5.83251817e-13, 1.1920929e-07, -6.10460575e-13, 1)
+Part9.Position = Vector3.new(19.20819854736328, 3.8928308486938477, -26.693103790283203)
+Part9.Color = Color3.new(1, 0.580392, 0.580392)
+Part9.Size = Vector3.new(0.20815876126289368, 1.6228811740875244, 0.2760668694972992)
+Part9.BottomSurface = Enum.SurfaceType.Smooth
+Part9.BrickColor = BrickColor.new("Salmon")
+Part9.Material = Enum.Material.Pebble
+Part9.TopSurface = Enum.SurfaceType.Smooth
+Part9.brickColor = BrickColor.new("Salmon")
+SpecialMesh10.Parent = Part9
+SpecialMesh10.MeshType = Enum.MeshType.Sphere
+Part11.Parent = Part1
+Part11.CFrame = CFrame.new(19.094532, 3.92116594, -26.6930904, 1, -2.91174094e-13, 1.19209268e-07, 3.0567603e-13, 1, 5.83251817e-13, 1.1920929e-07, -6.1046063e-13, 1)
+Part11.Position = Vector3.new(19.094532012939453, 3.921165943145752, -26.693090438842773)
+Part11.Color = Color3.new(1, 0.580392, 0.580392)
+Part11.Size = Vector3.new(0.2675495743751526, 1.1337517499923706, 0.2760668694972992)
+Part11.BottomSurface = Enum.SurfaceType.Smooth
+Part11.BrickColor = BrickColor.new("Salmon")
+Part11.Material = Enum.Material.Pebble
+Part11.TopSurface = Enum.SurfaceType.Smooth
+Part11.brickColor = BrickColor.new("Salmon")
+SpecialMesh12.Parent = Part11
+SpecialMesh12.MeshType = Enum.MeshType.Sphere
+Part13.Parent = Part1
+Part13.CFrame = CFrame.new(18.9619617, 3.60855222, -26.6931, 1, -2.91174067e-13, 1.19209268e-07, 3.0567603e-13, 1, 5.83251817e-13, 1.1920929e-07, -6.1046063e-13, 1)
+Part13.Position = Vector3.new(18.96196174621582, 3.6085522174835205, -26.693099975585938)
+Part13.Color = Color3.new(1, 0.580392, 0.580392)
+Part13.Size = Vector3.new(0.2675495743751526, 1.3814846277236938, 0.2760668694972992)
+Part13.BottomSurface = Enum.SurfaceType.Smooth
+Part13.BrickColor = BrickColor.new("Salmon")
+Part13.Material = Enum.Material.Pebble
+Part13.TopSurface = Enum.SurfaceType.Smooth
+Part13.brickColor = BrickColor.new("Salmon")
+SpecialMesh14.Parent = Part13
+SpecialMesh14.MeshType = Enum.MeshType.Sphere
+Part15.Parent = Part1
+Part15.CFrame = CFrame.new(18.8412018, 3.67356682, -26.5522423, 1, -2.91174067e-13, 1.19209261e-07, 3.05676003e-13, 0.99999994, 5.83251817e-13, 1.1920929e-07, -6.10460575e-13, 1)
+Part15.Position = Vector3.new(18.841201782226562, 3.6735668182373047, -26.552242279052734)
+Part15.Color = Color3.new(1, 0.580392, 0.580392)
+Part15.Size = Vector3.new(0.13299164175987244, 0.675048828125, 0.13704444468021393)
+Part15.BottomSurface = Enum.SurfaceType.Smooth
+Part15.BrickColor = BrickColor.new("Salmon")
+Part15.Material = Enum.Material.Pebble
+Part15.TopSurface = Enum.SurfaceType.Smooth
+Part15.brickColor = BrickColor.new("Salmon")
+SpecialMesh16.Parent = Part15
+SpecialMesh16.MeshType = Enum.MeshType.Sphere
+Part17.Parent = Part1
+Part17.CFrame = CFrame.new(19.0312519, 3.83266401, -26.6290207, 0.99999994, -2.91174067e-13, 1.19209261e-07, 3.05676003e-13, 1, 5.83251817e-13, 1.19209282e-07, -6.1046063e-13, 1)
+Part17.Position = Vector3.new(19.031251907348633, 3.8326640129089355, -26.62902069091797)
+Part17.Color = Color3.new(1, 0.580392, 0.580392)
+Part17.Size = Vector3.new(0.6250490546226501, 0.27040109038352966, 0.5635131597518921)
+Part17.BottomSurface = Enum.SurfaceType.Smooth
+Part17.BrickColor = BrickColor.new("Salmon")
+Part17.Material = Enum.Material.Pebble
+Part17.TopSurface = Enum.SurfaceType.Smooth
+Part17.brickColor = BrickColor.new("Salmon")
+SpecialMesh18.Parent = Part17
+SpecialMesh18.MeshType = Enum.MeshType.Sphere
+Part19.Parent = Part1
+Part19.CFrame = CFrame.new(18.6541176, 3.66861916, -26.498188, 1, -2.91174067e-13, 1.19209268e-07, 3.0567603e-13, 1, 5.83251871e-13, 1.1920929e-07, -6.10460575e-13, 1)
+Part19.Position = Vector3.new(18.654117584228516, 3.668619155883789, -26.498188018798828)
+Part19.Color = Color3.new(1, 0.580392, 0.580392)
+Part19.Size = Vector3.new(0.1826574057340622, 0.9789931774139404, 0.1884721964597702)
+Part19.BottomSurface = Enum.SurfaceType.Smooth
+Part19.BrickColor = BrickColor.new("Salmon")
+Part19.Material = Enum.Material.Pebble
+Part19.TopSurface = Enum.SurfaceType.Smooth
+Part19.brickColor = BrickColor.new("Salmon")
+SpecialMesh20.Parent = Part19
+SpecialMesh20.MeshType = Enum.MeshType.Sphere
+for i,v in pairs(mas:GetChildren()) do
+	v.Parent = game:GetService("Players").LocalPlayer.Backpack
+	pcall(function() v:MakeJoints() end)
+end
+mas:Destroy()
+for i,v in pairs(cors) do
+	spawn(function()
+		pcall(v)
+	end)
+end
